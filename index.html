@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="description" content="Inventaire de vos biens mobiliers — local et chiffré">
+  <title>Inventaire des biens</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icons/icon-192.png">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="stylesheet" href="./css/style.css">
+  <script type="module" src="./js/app.js"></script>
+</head>
+<body>
+  <div id="lock-screen" class="lock-screen">
+    <div class="lock-card">
+      <div class="lock-logo">📦</div>
+      <h1>Inventaire des biens</h1>
+      <p id="lock-title" class="lock-subtitle">Déverrouillez votre coffre</p>
+      <input type="password" id="lock-password" placeholder="Mot de passe maître" autocomplete="current-password">
+      <input type="password" id="lock-password-confirm" placeholder="Confirmez le mot de passe" autocomplete="new-password" hidden>
+      <button id="btn-unlock" class="btn primary block">Déverrouiller</button>
+      <p id="lock-error" class="error" hidden></p>
+      <p class="hint">Vos données restent sur cet appareil, chiffrées (AES-256) avec votre mot de passe. Aucune information n'est envoyée sur internet.</p>
+    </div>
+  </div>
+
+  <div id="app" hidden>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-logo">📦</span>
+        <div>
+          <strong>Inventaire des biens</strong>
+          <small id="header-total">—</small>
+        </div>
+      </div>
+      <button id="btn-lock" class="btn ghost">🔒 Verrouiller</button>
+    </header>
+
+    <nav class="tabs">
+      <button data-view="list" class="tab active">Inventaire</button>
+      <button data-view="stats" class="tab">Statistiques</button>
+      <button data-view="settings" class="tab">Sauvegarde</button>
+    </nav>
+
+    <main class="main">
+      <section id="view-list" class="view">
+        <div class="toolbar">
+          <input type="search" id="f-search" placeholder="🔍 Rechercher un bien…">
+          <div class="filters">
+            <select id="f-category"><option value="">Toutes catégories</option></select>
+            <select id="f-room"><option value="">Toutes pièces</option></select>
+            <select id="f-year"><option value="">Toutes années</option></select>
+            <select id="f-status">
+              <option value="actif" selected>Actifs</option>
+              <option value="">Tous statuts</option>
+              <option value="vendu">Vendus</option>
+              <option value="donné">Donnés</option>
+              <option value="perdu">Perdus</option>
+            </select>
+            <select id="f-group">
+              <option value="room" selected>Grouper par pièce</option>
+              <option value="category">Grouper par catégorie</option>
+              <option value="year">Grouper par année</option>
+              <option value="none">Sans regroupement</option>
+            </select>
+            <select id="f-sort">
+              <option value="name" selected>Trier : nom (A→Z)</option>
+              <option value="estimated">Trier : valeur estimée ↓</option>
+              <option value="price">Trier : prix d'achat ↓</option>
+              <option value="date">Trier : date d'achat ↓</option>
+            </select>
+          </div>
+          <button id="btn-add" class="btn primary">＋ Ajouter un bien</button>
+        </div>
+        <div id="list-container"></div>
+      </section>
+
+      <section id="view-form" class="view" hidden>
+        <form id="item-form" novalidate>
+          <input type="hidden" id="i-id">
+          <div class="form-grid">
+            <label class="field wide">Nom du bien *
+              <input id="i-name" required placeholder="Ex. Télévision séjour">
+            </label>
+            <label class="field">Catégorie
+              <select id="i-category"></select>
+            </label>
+            <label class="field">Pièce
+              <select id="i-room"></select>
+            </label>
+            <label class="field">Date d'achat
+              <input type="date" id="i-date">
+            </label>
+            <label class="field">Statut
+              <select id="i-status"></select>
+            </label>
+            <label class="field">Prix d'achat (€)
+              <input type="number" id="i-price" step="0.01" min="0" inputmode="decimal">
+            </label>
+            <label class="field">Valeur estimée (€)
+              <input type="number" id="i-estimated" step="0.01" min="0" inputmode="decimal">
+            </label>
+          </div>
+          <p id="estimate-hint" class="hint"></p>
+          <div class="inline-actions">
+            <button type="button" id="btn-estimate" class="btn ghost">💡 Estimer automatiquement</button>
+          </div>
+          <label class="field wide">Notes
+            <textarea id="i-notes" rows="2" placeholder="Marque, modèle, numéro de série…"></textarea>
+          </label>
+
+          <fieldset>
+            <legend>Photos <span class="muted">— l'IA propose une catégorie et un nom d'après la photo</span></legend>
+            <input type="file" id="i-photos" accept="image/*" multiple>
+            <div id="photo-list" class="attachments"></div>
+            <p id="ai-status" class="hint"></p>
+          </fieldset>
+
+          <fieldset>
+            <legend>Factures &amp; documents (PDF ou photos)</legend>
+            <input type="file" id="i-invoices" accept="image/*,application/pdf" multiple>
+            <div id="invoice-list" class="attachments"></div>
+          </fieldset>
+
+          <div class="actions">
+            <button type="submit" class="btn primary">Enregistrer</button>
+            <button type="button" id="btn-cancel" class="btn ghost">Annuler</button>
+            <button type="button" id="btn-delete" class="btn danger" hidden>Supprimer</button>
+          </div>
+        </form>
+      </section>
+
+      <section id="view-stats" class="view" hidden>
+        <div id="stat-cards" class="cards"></div>
+        <div id="stat-breakdowns"></div>
+      </section>
+
+      <section id="view-settings" class="view" hidden>
+        <div class="panel">
+          <h2>💾 Sauvegarde chiffrée</h2>
+          <p class="hint">La sauvegarde est un fichier chiffré avec votre mot de passe maître : enregistrez-le dans votre dossier <strong>iCloud Drive</strong> (ou tout autre cloud) et il sera synchronisé automatiquement. Même en cas de vol du fichier, personne ne peut le lire sans votre mot de passe.</p>
+          <div class="inline-actions">
+            <button id="btn-backup" class="btn primary">📥 Créer la sauvegarde</button>
+            <label class="btn ghost file-btn">📤 Restaurer une sauvegarde
+              <input type="file" id="i-restore" accept="application/json,.json" hidden>
+            </label>
+          </div>
+          <p id="backup-status" class="hint"></p>
+        </div>
+
+        <div class="panel">
+          <h2>📄 Dossier sinistre</h2>
+          <p class="hint">Génère un document imprimable avec photos, montants et factures : imprimez-le en « Enregistrer au format PDF » pour le joindre à votre déclaration d'assurance.</p>
+          <label class="check"><input type="checkbox" id="rep-active-only" checked> Uniquement les biens actifs</label>
+          <div class="inline-actions">
+            <button id="btn-report" class="btn primary">Générer le dossier sinistre</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>🛡️ Sécurité</h2>
+          <p class="hint" id="about-text"></p>
+          <button id="btn-wipe" class="btn danger">Effacer toutes les données de cet appareil</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="print-area"></div>
+  <div id="toast" class="toast" hidden></div>
+</body>
+</html>
