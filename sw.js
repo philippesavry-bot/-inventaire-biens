@@ -1,10 +1,11 @@
-const CACHE = 'inventaire-biens-v1';
+const CACHE = 'inventaire-biens-v2';
 const ASSETS = [
   './',
   './index.html',
   './manifest.webmanifest',
   './css/style.css',
   './js/constants.js',
+  './js/plan.js',
   './js/crypto.js',
   './js/db.js',
   './js/ai.js',

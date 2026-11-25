@@ -40,10 +40,11 @@ Ouvrez ensuite http://localhost:8000, créez votre coffre (mot de passe maître)
 1. **Créer le coffre** : premier lancement, choisissez un mot de passe maître (perdu = données irrécupérables, par conception)
 2. **Ajouter un bien** : ＋ Ajouter → prenez/choisissez une photo → l'IA propose catégorie et nom → complétez pièce, date d'achat, prix → la valeur estimée est suggérée automatiquement
 3. **Factures** : joignez un ou plusieurs PDF ou photos par bien
-4. **Statistiques** : onglet dédié — valeur totale, par pièce, par catégorie, par année d'achat
-5. **Regroupements et filtres** : recherche texte, pièce, catégorie, année, statut ; regroupement par pièce/catégorie/année ; tris par valeur, prix ou date
-6. **Sauvegarde** : onglet Sauvegarde → « Créer la sauvegarde » → enregistrez le fichier dans votre dossier iCloud Drive
-7. **Dossier sinistre** : onglet Sauvegarde → génère un document imprimable (photo, montants, factures) à joindre à votre déclaration d'assurance — « Enregistrer au format PDF »
+4. **Plan des zones de vie** : onglet Plan — créez vos niveaux (Rez-de-chaussée, Étage, Cave, Extérieur, …) et dessinez vos zones comme des carrés cliquables : déplacement au doigt, renommage, couleur et taille personnalisées ; « 📂 Voir les biens » filtre l'inventaire sur la zone ; les zones alimentent automatiquement la liste des pièces dans tout le reste de l'app
+5. **Statistiques** : onglet dédié — valeur totale, par pièce, par catégorie, par année d'achat
+6. **Regroupements et filtres** : recherche texte, pièce (y compris zones du plan), catégorie, année, statut ; regroupement par pièce/catégorie/année ; tris par valeur, prix ou date
+7. **Sauvegarde** : onglet Sauvegarde → « Créer la sauvegarde » → enregistrez le fichier dans votre dossier iCloud Drive
+8. **Dossier sinistre** : onglet Sauvegarde → génère un document imprimable (photo, montants, factures) à joindre à votre déclaration d'assurance — « Enregistrer au format PDF »
 
 ## Sécurité — ce qui est garanti / non garanti
 
@@ -73,6 +74,7 @@ Structure :
 index.html              Interface (écran de verrouillage, inventaire, stats, sauvegarde)
 css/style.css           Style
 js/constants.js         Catégories, pièces, statuts
+js/plan.js              Plan des zones de vie (niveaux, zones cliquables/m déplaçables)
 js/crypto.js            Coffre-fort : PBKDF2 + AES-256-GCM
 js/db.js                IndexedDB : enregistrements chiffrés + fichiers
 js/ai.js                Reconnaissance photo (TensorFlow.js/MobileNet chargé à la demande)

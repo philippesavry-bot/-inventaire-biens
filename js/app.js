@@ -23,6 +23,7 @@ import {
 } from './db.js';
 import { classifyPhoto, aiAvailable } from './ai.js';
 import { estimateValue, estimateExplanation } from './estimate.js';
+import { createPlanView, defaultPlan, zoneLabels } from './plan.js';
 
 const LOCK_INACTIVITY_MS = 5 * 60 * 1000;
 
@@ -30,6 +31,8 @@ const state = {
   items: new Map(),
   fileRecords: new Map(),
   fileUrls: new Map(),
+  plan: null,
+  planCtl: null,
   filters: { q: '', category: '', room: '', year: '', status: 'actif', group: 'room', sort: 'name' },
   editing: null
 };
@@ -134,8 +137,44 @@ async function loadAll() {
       }
     } else if (record.type === 'file') {
       state.fileRecords.set(record.id, record);
+    } else if (record.type === 'plan') {
+      try {
+        state.plan = (await decryptJSON(record)).value || null;
+      } catch (error) {
+        console.warn('Plan illisible ignoré :', record.id);
+      }
     }
   }
+  if (!state.plan) state.plan = defaultPlan();
+}
+
+function roomLabels() {
+  const plan = state.plan || defaultPlan();
+  return [...new Set([...ROOMS, ...zoneLabels(plan)])];
+}
+
+function refreshFormRoomSelect() {
+  const labels = roomLabels();
+  const select = $('i-room');
+  const previous = select.value;
+  select.innerHTML = labels.map((r) => `<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`).join('');
+  if (previous && labels.includes(previous)) select.value = previous;
+}
+
+async function savePlan() {
+  try {
+    const record = { id: 'plan:main', type: 'plan', ...(await encryptJSON({ value: state.plan })) };
+    await putRecord(record);
+  } catch (error) {
+    toast(`Échec de l'enregistrement du plan : ${error.message}`);
+  }
+}
+
+function viewZoneItems(label) {
+  state.filters.room = label;
+  $('f-room').value = label;
+  switchView('list');
+  renderList();
 }
 
 function yearsList() {
@@ -158,7 +197,7 @@ function refreshFilters() {
     CATEGORIES.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
   $('f-room').innerHTML =
     '<option value="">Toutes pièces</option>' +
-    ROOMS.map((r) => `<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`).join('');
+    roomLabels().map((r) => `<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`).join('');
   year.innerHTML = '<option value="">Toutes années</option>' + yearsList().map((y) => `<option value="${y}">${y}</option>`).join('');
   keep(category, state.filters.category);
   keep(room, state.filters.room);
@@ -786,6 +825,7 @@ function enterApp() {
   el.lockPasswordConfirm.hidden = true;
   loadAll()
     .then(() => {
+      state.planCtl.setPlan(state.plan);
       refreshFilters();
       updateHeaderTotal();
       switchView('list');
@@ -800,6 +840,16 @@ async function init() {
   $('i-category').innerHTML = CATEGORIES.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
   $('i-room').innerHTML = ROOMS.map((r) => `<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`).join('');
   $('i-status').innerHTML = STATUSES.map((s) => `<option value="${escapeHtml(s.value)}">${escapeHtml(s.label)}</option>`).join('');
+
+  state.planCtl = createPlanView($('view-plan'), {
+    onChange: (plan) => {
+      state.plan = plan;
+      void savePlan();
+      refreshFilters();
+      refreshFormRoomSelect();
+    },
+    onViewZone: viewZoneItems
+  });
   $('about-text').textContent =
     'Les données sont stockées uniquement dans ce navigateur (IndexedDB), chiffrées en AES-256-GCM avec une clé dérivée de votre mot de passe maître (PBKDF2, 310 000 itérations).';
 
