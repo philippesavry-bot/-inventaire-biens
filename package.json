@@ -1,0 +1,6 @@
+{
+  "name": "inventaire-biens",
+  "private": true,
+  "type": "module",
+  "description": "Inventaire de biens mobiliers — PWA locale et chiffree"
+}
